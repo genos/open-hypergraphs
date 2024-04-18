@@ -1,0 +1,21 @@
+[package]
+name = "open-hypergraphs"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+itertools = "0.12.1"
+ndarray = "0.15.6"
+thiserror = "1.0.57"
+
+[dev-dependencies]
+paste = "1.0.14"
+proptest = "1.4.0"
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
