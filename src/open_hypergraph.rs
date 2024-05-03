@@ -30,7 +30,7 @@ impl<A: Backend> OpenHypergraph<A> {
     ///
     /// # References
     /// [John Regehr on assertions](https://blog.regehr.org/archives/1091)
-    pub(crate) fn check_rep(&self) -> Result<(), Error<A>> {
+    pub(crate) const fn check_rep(&self) -> Result<(), Error<A>> {
         if self.s.target != self.h.num_vertices() {
             Err(Error::SHMismatch {
                 t: self.s.target,
@@ -120,7 +120,7 @@ impl<A: Backend> OpenHypergraph<A> {
     /// If the source of the input `x` is not zero.
     pub fn identity(w: FiniteFunction<A>, x: FiniteFunction<A>) -> Result<Self, Error<A>> {
         if x.source != 0 {
-            Err(Error::SourceMustBeZero(x.clone()))
+            Err(Error::SourceMustBeZero(x))
         } else {
             let s = FiniteFunction::identity(w.source);
             let t = FiniteFunction::identity(w.source);
@@ -147,6 +147,7 @@ impl<A: Backend> OpenHypergraph<A> {
     }
 
     /// Dagger
+    #[must_use]
     pub fn dagger(&self) -> Self {
         Self {
             s: self.t.clone(),
@@ -156,6 +157,10 @@ impl<A: Backend> OpenHypergraph<A> {
     }
 
     /// Frobenius spider
+    ///
+    /// # Errors
+    ///
+    /// If the underlying `Hypergraph::discrete` call fails.
     pub fn spider(
         s: FiniteFunction<A>,
         t: FiniteFunction<A>,
@@ -167,35 +172,35 @@ impl<A: Backend> OpenHypergraph<A> {
     }
 
     /// Frobenius half spider
+    ///
+    /// # Errors
+    ///
+    /// If the underlying `Self::spider` call fails.
     pub fn half_spider(
         s: FiniteFunction<A>,
         w: FiniteFunction<A>,
         x: FiniteFunction<A>,
     ) -> Result<Self, Error<A>> {
-        OpenHypergraph::spider(s, FiniteFunction::identity(w.source), w, x)
+        Self::spider(s, FiniteFunction::identity(w.source), w, x)
     }
 
     /// The N-fold tensoring of operations
+    ///
+    /// # Errors
+    ///
+    /// If `x`, `a`, or `b` don't align correctly, or if other errors occur in internal
+    /// computation.
     pub fn tensor_operations(
         x: FiniteFunction<A>,
         a: IndexedCoproduct<A>,
         b: IndexedCoproduct<A>,
     ) -> Result<Self, Error<A>> {
         if b.values.target != a.values.target {
-            Err(Error::TargetsMismatch {
-                a: a.clone(),
-                b: b.clone(),
-            })
+            Err(Error::TargetsMismatch { a, b })
         } else if x.source != a.source() {
-            Err(Error::SourcesMismatch {
-                f: x.clone(),
-                i: a.clone(),
-            })
+            Err(Error::SourcesMismatch { f: x, i: a })
         } else if x.source != b.source() {
-            Err(Error::SourcesMismatch {
-                f: x.clone(),
-                i: b.clone(),
-            })
+            Err(Error::SourcesMismatch { f: x, i: b })
         } else {
             let s = FiniteFunction::inj0(a.values.source, b.values.source);
             let t = FiniteFunction::inj1(a.values.source, b.values.source);
@@ -296,7 +301,7 @@ pub(crate) mod strategies {
     use crate::{finite_function::strategies as ffs, hypergraph::strategies as hs};
     use proptest::prelude::*;
 
-    pub(crate) fn arrows<A: Backend>() -> impl Strategy<Value = OpenHypergraph<A>> {
+    pub fn arrows<A: Backend>() -> impl Strategy<Value = OpenHypergraph<A>> {
         hs::hypergraphs()
             .prop_flat_map(|h| {
                 let w = h.num_vertices();

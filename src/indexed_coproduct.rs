@@ -86,7 +86,7 @@ impl<A: Backend> IndexedCoproduct<A> {
     /// assert_eq!(IndexedCoproduct::<StdVec>::initial(3).source(), 0);
     /// ```
     #[must_use]
-    pub fn source(&self) -> usize {
+    pub const fn source(&self) -> usize {
         self.sources.source
     }
 
@@ -99,7 +99,7 @@ impl<A: Backend> IndexedCoproduct<A> {
     /// assert_eq!(IndexedCoproduct::<StdVec>::initial(3).target(), 3);
     /// ```
     #[must_use]
-    pub fn target(&self) -> usize {
+    pub const fn target(&self) -> usize {
         self.values.target
     }
 
@@ -379,7 +379,7 @@ pub enum Error<A: Backend> {
     /// A finite function error occurred: {0}
     #[error("A finite function error occurred: {0}")]
     FiniteFunction(#[from] FFError<A>),
-    /// The sum {sum} of the sources table doesn't match the source of values {values}
+    /// The sum {`sum`} of the sources table doesn't match the source of values {`values`}
     #[error("The sum {sum} of the sources table doesn't match the source of values {values}")]
     SourcesSumValuesSourceMismatch {
         /// The sum of the sources table
@@ -387,7 +387,7 @@ pub enum Error<A: Backend> {
         /// The values finite function
         values: FiniteFunction<A>,
     },
-    /// The target {first} doesn't match {second}
+    /// The target {`first`} doesn't match {`second`}
     #[error("The target {first} doesn't match {second}")]
     TargetMismatch {
         /// First target
@@ -398,7 +398,7 @@ pub enum Error<A: Backend> {
     /// Tried to take the tensor of an empty collection of indexed coproducts
     #[error("Tried to take the tensor of an empty collection of indexed coproducts")]
     EmptyTensorOf,
-    /// The values {values} source {src_0} doesn't match the other's source {src_1}
+    /// The values {`values`} source {`src_0`} doesn't match the other's source {`src_1`}
     #[error("The values {values} source {src_0} doesn't match the other's source {src_1}")]
     SourceMistmatch {
         /// The values field of the first indexed coproduct
@@ -427,15 +427,15 @@ pub(crate) mod strategies {
     use crate::finite_function::strategies as ffs;
     use proptest::prelude::*;
 
-    pub(crate) fn coproduct_indexes() -> impl Strategy<Value = usize> {
+    pub fn coproduct_indexes() -> impl Strategy<Value = usize> {
         0..32usize
     }
 
-    pub(crate) fn indexed_coproducts<A: Backend>() -> impl Strategy<Value = IndexedCoproduct<A>> {
+    pub fn indexed_coproducts<A: Backend>() -> impl Strategy<Value = IndexedCoproduct<A>> {
         coproduct_indexes().prop_flat_map(indexed_coproduct_from)
     }
 
-    pub(crate) fn indexed_coproduct_from<A: Backend>(
+    pub fn indexed_coproduct_from<A: Backend>(
         n: usize,
     ) -> impl Strategy<Value = IndexedCoproduct<A>> {
         ffs::arrow_from(n)
@@ -447,7 +447,7 @@ pub(crate) mod strategies {
             .prop_map(|(sources, values)| IndexedCoproduct { sources, values })
     }
 
-    pub(crate) fn indexed_coproduct<A: Backend>(
+    pub fn indexed_coproduct<A: Backend>(
         source: usize,
         target: usize,
     ) -> impl Strategy<Value = IndexedCoproduct<A>> {
@@ -460,11 +460,11 @@ pub(crate) mod strategies {
             .prop_map(|(sources, values)| IndexedCoproduct { sources, values })
     }
 
-    pub(crate) fn coproduct_list<A: Backend>() -> impl Strategy<Value = Vec<IndexedCoproduct<A>>> {
+    pub fn coproduct_list<A: Backend>() -> impl Strategy<Value = Vec<IndexedCoproduct<A>>> {
         (1..5usize).prop_flat_map(|n| proptest::collection::vec(indexed_coproducts(), n))
     }
 
-    pub(crate) fn composable_indexed_coproducts<A: Backend>(
+    pub fn composable_indexed_coproducts<A: Backend>(
     ) -> impl Strategy<Value = (IndexedCoproduct<A>, IndexedCoproduct<A>)> {
         indexed_coproducts().prop_flat_map(|c| {
             let n = c.values.source;
@@ -472,7 +472,7 @@ pub(crate) mod strategies {
         })
     }
 
-    pub(crate) fn map_with_indexed_coproduct<A: Backend>(
+    pub fn map_with_indexed_coproduct<A: Backend>(
     ) -> impl Strategy<Value = (IndexedCoproduct<A>, FiniteFunction<A>)> {
         indexed_coproducts().prop_flat_map(|c| {
             let n = c.source();

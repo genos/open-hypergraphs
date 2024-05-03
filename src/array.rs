@@ -117,11 +117,9 @@ pub trait Backend:
     #[must_use]
     fn segmented_arange(&self) -> Self {
         let mut ptr = self.prefix_sum().iter().collect::<Vec<_>>();
-        if let Some(n) = ptr.pop() {
+        ptr.pop().map_or_else(Self::empty, |n| {
             Self::arange(0, n) - Self::array(ptr.into_iter()).repeat(self)
-        } else {
-            Self::empty()
-        }
+        })
     }
     /// Sum within segments dictated by other array.
     #[must_use]
@@ -138,14 +136,10 @@ pub trait Backend:
 pub(crate) mod strategies {
     use super::*;
     use proptest::prelude::*;
-    pub(crate) fn array<A: Backend>(
-        min: usize,
-        max: usize,
-        len: usize,
-    ) -> impl Strategy<Value = A> {
+    pub fn array<A: Backend>(min: usize, max: usize, len: usize) -> impl Strategy<Value = A> {
         proptest::collection::vec(min..max, len).prop_map(|xs| A::array(xs.into_iter()))
     }
-    pub(crate) fn permutation<A: Backend>(n: usize) -> impl Strategy<Value = A> {
+    pub fn permutation<A: Backend>(n: usize) -> impl Strategy<Value = A> {
         Just((0..n).collect::<Vec<usize>>())
             .prop_shuffle()
             .prop_map(|xs| A::array(xs.into_iter()))
@@ -275,26 +269,26 @@ pub type NDArray1Usize = Array1<usize>;
 
 impl Backend for NDArray1Usize {
     fn empty() -> Self {
-        Array1::from_vec(Vec::new())
+        Self::from_vec(Vec::new())
     }
     fn constant(item: usize, size: usize) -> Self {
-        Array1::from_elem(size, item)
+        Self::from_elem(size, item)
     }
     fn array(xs: impl Iterator<Item = usize>) -> Self {
-        Array1::from_iter(xs)
+        Self::from_iter(xs)
     }
     fn iter(&self) -> impl Iterator<Item = usize> {
         self.iter().copied()
     }
     fn len(&self) -> usize {
-        Array1::len(self)
+        Self::len(self)
     }
     fn sum(&self) -> usize {
-        Array1::sum(self)
+        Self::sum(self)
     }
     fn slice(&self, lo: usize, hi: usize) -> Self {
         // ndarray's usual slice is unsafe, not that we do any bounds checking here either
-        Array1::from_iter((lo..hi).map(|i| self[i]))
+        Self::from_iter((lo..hi).map(|i| self[i]))
     }
     fn prefix_sum(&self) -> Self {
         let mut out = <Self as Backend>::zeros(1).append(self);
@@ -303,7 +297,7 @@ impl Backend for NDArray1Usize {
     }
     fn append(&self, other: &Self) -> Self {
         let mut out = self.clone();
-        Array1::append(&mut out, Axis(0), other.view()).unwrap();
+        Self::append(&mut out, Axis(0), other.view()).unwrap();
         out
     }
     fn select(&self, index: &Self) -> Self {

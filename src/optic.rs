@@ -15,6 +15,10 @@ pub trait Optic<A: Backend>: FrobeniusFunctor<A> {
     /// Reverse map
     fn rev(&self) -> impl FrobeniusFunctor<A>;
     /// Compute the object M for each operation x[i] : a[i] → b[i]
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn residual(
         &self,
         x: &FiniteFunction<A>,
@@ -22,6 +26,10 @@ pub trait Optic<A: Backend>: FrobeniusFunctor<A> {
         b: &IndexedCoproduct<A>,
     ) -> Result<IndexedCoproduct<A>, Error<A>>;
     /// Map objects
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_objects(&self, objects: &FiniteFunction<A>) -> Result<IndexedCoproduct<A>, Error<A>> {
         let fa = self.fwd().map_objects(objects)?;
         let ra = self.rev().map_objects(objects)?;
@@ -36,13 +44,14 @@ pub trait Optic<A: Backend>: FrobeniusFunctor<A> {
             let values = paired.map_indexes(&p)?.values;
             Ok(IndexedCoproduct { sources, values })
         } else {
-            Err(Error::SourcesMismatch {
-                fa: fa.clone(),
-                ra: ra.clone(),
-            })
+            Err(Error::SourcesMismatch { fa, ra })
         }
     }
     /// Map operations
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_operations(
         &self,
         x: &FiniteFunction<A>,
@@ -96,7 +105,13 @@ pub trait Optic<A: Backend>: FrobeniusFunctor<A> {
         ((lhs >> d)? >> rhs).map_err(Into::into)
     }
 
-    /// An OpenHypergraph whose source is A+B and whose target is the "interleaving" (A₀ + B₀) + (A₁ + B₁) + ... (An + Bn)
+    /// An `OpenHypergraph` whose source is A+B and whose target is the "interleaving" (A₀ + B₀) +
+    /// (A₁ + B₁) + ... (An + Bn)
+    ///
+    /// # Errors
+    ///
+    /// If the sources of `a` and `b` differ, if `x`'s source isn't 0, or if there are other errors
+    /// in computation.
     fn interleave_blocks(
         &self,
         a: &IndexedCoproduct<A>,

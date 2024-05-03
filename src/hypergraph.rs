@@ -65,13 +65,13 @@ impl<A: Backend> Hypergraph<A> {
 
     /// Number of vertices
     #[must_use]
-    pub fn num_vertices(&self) -> usize {
+    pub const fn num_vertices(&self) -> usize {
         self.w.source
     }
 
     /// Number of edges
     #[must_use]
-    pub fn num_edges(&self) -> usize {
+    pub const fn num_edges(&self) -> usize {
         self.x.source
     }
 
@@ -130,14 +130,14 @@ impl<A: Backend> Hypergraph<A> {
             Ok(Self { s, t, w, x })
         } else {
             Err(Error::DiscreteRequiresNoEdges {
-                hyperedge_labels: x.clone(),
+                hyperedge_labels: x,
             })
         }
     }
 
     /// Is this the discrete hypergraph?
     #[must_use]
-    pub fn is_discrete(&self) -> bool {
+    pub const fn is_discrete(&self) -> bool {
         self.s.source() == 0 && self.t.source() == 0 && self.x.source == 0
     }
 
@@ -292,7 +292,7 @@ pub enum Error<A: Backend> {
     /// A finite function error occurred: {0}
     #[error("A indexed coproduct error occurred: {0}")]
     IndexedCoproduct(#[from] ICError<A>),
-    /// Sources/Hypernodes mismatch: sources = {sources}, hypernode labels = {hypernode_labels}.
+    /// Sources/Hypernodes mismatch: sources = {`sources`}, hypernode labels = {`hypernode_labels`}.
     #[error(
         "Sources/Hypernodes mismatch: sources = {sources}, hypernode labels = {hypernode_labels}."
     )]
@@ -302,7 +302,7 @@ pub enum Error<A: Backend> {
         /// Potential hypernode labels
         hypernode_labels: FiniteFunction<A>,
     },
-    /// Targets/Hypernodes mismatch: targets = {targets}, hypernode labels = {hypernode_labels}.
+    /// Targets/Hypernodes mismatch: targets = {`targets`}, hypernode labels = {`hypernode_labels`}.
     #[error(
         "Targets/Hypernodes mismatch: sources = {targets}, hypernode labels = {hypernode_labels}."
     )]
@@ -312,7 +312,7 @@ pub enum Error<A: Backend> {
         /// Potential hypernode labels
         hypernode_labels: FiniteFunction<A>,
     },
-    /// Sources/Hyperedges mismatch: sources = {sources}, hyperedge labels = {hyperedge_labels}.
+    /// Sources/Hyperedges mismatch: sources = {`sources`}, hyperedge labels = {`hyperedge_labels`}.
     #[error(
         "Sources/Hyperedges mismatch: sources = {sources}, hyperedge labels = {hyperedge_labels}."
     )]
@@ -322,7 +322,7 @@ pub enum Error<A: Backend> {
         /// Potential hyperedge labels
         hyperedge_labels: FiniteFunction<A>,
     },
-    /// Targets/Hyperedges mismatch: targets = {targets}, hyperedge labels = {hyperedge_labels}.
+    /// Targets/Hyperedges mismatch: targets = {`targets`}, hyperedge labels = {`hyperedge_labels`}.
     #[error(
         "Targets/Hyperedges mismatch: targets = {targets}, hyperedge labels = {hyperedge_labels}."
     )]
@@ -332,13 +332,13 @@ pub enum Error<A: Backend> {
         /// Potential hyperedge labels
         hyperedge_labels: FiniteFunction<A>,
     },
-    /// The discrete hypergraph requires no edges, was given hyperedge labels = {hyperedge_labels}.
+    /// The discrete hypergraph requires no edges, was given hyperedge labels = {`hyperedge_labels`}.
     #[error("The discrete hypergraph requires no edges, was given hyperedge labels = {hyperedge_labels}.")]
     DiscreteRequiresNoEdges {
         /// Potential hyperedge labels
         hyperedge_labels: FiniteFunction<A>,
     },
-    /// The target of the node label {first} doesn't match the target of {second}.
+    /// The target of the node label {`first`} doesn't match the target of {`second`}.
     #[error("The target of the node label {first} doesn't match the target of {second}.")]
     NodeLabelTargetsMismatch {
         /// First hypernode labels
@@ -346,7 +346,7 @@ pub enum Error<A: Backend> {
         /// Second hypernode labels
         second: FiniteFunction<A>,
     },
-    /// The target of the edge label {first} doesn't match the target of {second}.
+    /// The target of the edge label {`first`} doesn't match the target of {`second`}.
     #[error("The target of the edge label {first} doesn't match the target of {second}.")]
     EdgeLabelTargetsMismatch {
         /// First hyperedge labels
@@ -357,7 +357,7 @@ pub enum Error<A: Backend> {
     /// The n-fold coproduct of hypergraphs is only valid for n > 0.
     #[error("The n-fold coproduct of hypergraphs is only valid for n > 0.")]
     EmptyCoproduct,
-    /// The purported coequalizer {q} has a different source than the number of edges {edges}.
+    /// The purported coequalizer {`q`} has a different source than the number of edges {`edges`}.
     #[error(
         "The purported coequalizer {q} has a different source than the number of edges {edges}."
     )]
@@ -387,12 +387,11 @@ pub(crate) mod strategies {
     };
     use proptest::prelude::*;
 
-    pub(crate) fn num_hypernodes(num_hyperedges: usize) -> impl Strategy<Value = usize> {
+    pub fn num_hypernodes(num_hyperedges: usize) -> impl Strategy<Value = usize> {
         usize::from(num_hyperedges > 0)..32
     }
 
-    pub(crate) fn labels<A: Backend>(
-    ) -> impl Strategy<Value = (FiniteFunction<A>, FiniteFunction<A>)> {
+    pub fn labels<A: Backend>() -> impl Strategy<Value = (FiniteFunction<A>, FiniteFunction<A>)> {
         ffs::arrows_nz()
             .prop_flat_map(|x| {
                 let s = x.source;
@@ -401,7 +400,7 @@ pub(crate) mod strategies {
             .prop_flat_map(|(w, x)| (ffs::arrow_from(w), Just(x)))
     }
 
-    pub(crate) fn hypergraph<A: Backend>(
+    pub fn hypergraph<A: Backend>(
         w: FiniteFunction<A>,
         x: FiniteFunction<A>,
     ) -> impl Strategy<Value = Hypergraph<A>> {
@@ -423,11 +422,11 @@ pub(crate) mod strategies {
             })
     }
 
-    pub(crate) fn hypergraphs<A: Backend>() -> impl Strategy<Value = Hypergraph<A>> {
+    pub fn hypergraphs<A: Backend>() -> impl Strategy<Value = Hypergraph<A>> {
         labels().prop_flat_map(|(w, x)| hypergraph(w, x))
     }
 
-    pub(crate) fn hypergraph_and_permutation<A: Backend>(
+    pub fn hypergraph_and_permutation<A: Backend>(
     ) -> impl Strategy<Value = (Hypergraph<A>, FiniteFunction<A>, FiniteFunction<A>)> {
         hypergraphs().prop_flat_map(|h| {
             let vs = h.num_vertices();
@@ -436,16 +435,15 @@ pub(crate) mod strategies {
         })
     }
 
-    pub(crate) fn discrete<A: Backend>() -> impl Strategy<Value = Hypergraph<A>> {
+    pub fn discrete<A: Backend>() -> impl Strategy<Value = Hypergraph<A>> {
         labels().prop_flat_map(|(w, x)| hypergraph(w, x.to_initial()))
     }
 
-    pub(crate) fn valid_coproduct<A: Backend>(
-    ) -> impl Strategy<Value = (Hypergraph<A>, Hypergraph<A>)> {
+    pub fn valid_coproduct<A: Backend>() -> impl Strategy<Value = (Hypergraph<A>, Hypergraph<A>)> {
         labels().prop_flat_map(|(w, x)| (hypergraph(w.clone(), x.clone()), hypergraph(w, x)))
     }
 
-    pub(crate) fn coproductable<A: Backend>() -> impl Strategy<Value = Vec<Hypergraph<A>>> {
+    pub fn coproductable<A: Backend>() -> impl Strategy<Value = Vec<Hypergraph<A>>> {
         (1..32usize, labels())
             .prop_flat_map(|(n, (w, x))| proptest::collection::vec(hypergraph(w, x), n))
     }

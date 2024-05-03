@@ -8,9 +8,17 @@ use crate::{
 
 /// Strict symmetric monoidal hypergraph functors
 pub trait Functor<A: Backend> {
-    ///  Map objects
+    /// Map objects
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_objects(&self, objects: &FiniteFunction<A>) -> Result<IndexedCoproduct<A>, Error<A>>;
     /// Map arrow
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_arrow(&self, f: &OpenHypergraph<A>) -> Result<OpenHypergraph<A>, Error<A>>;
 }
 
@@ -37,9 +45,14 @@ fn map_half_spider<A: Backend>(
 }
 
 /// Map a tensoring of operations into an open hypergraph
+#[allow(clippy::module_name_repetitions)]
 pub trait FrobeniusFunctor<A: Backend>: Functor<A> {
     /// Compute F(x₁) ● F(x₂) ● ... ● F(xn), where each x ∈ Σ₁ is an operation, and sources and
     /// targets are the types of each operation.
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_operations(
         &self,
         x: &FiniteFunction<A>,
@@ -47,7 +60,11 @@ pub trait FrobeniusFunctor<A: Backend>: Functor<A> {
         targets: &IndexedCoproduct<A>,
     ) -> Result<OpenHypergraph<A>, Error<A>>;
 
-    /// Implement map_arrow based on map_operations!
+    /// Implement `map_arrow` based on `map_operations`!
+    ///
+    /// # Errors
+    ///
+    /// If any of the internal computations error.
     fn map_arrow(&self, f: &OpenHypergraph<A>) -> Result<OpenHypergraph<A>, Error<A>> {
         // Ff: the tensoring of operations F(x₀) ● F(x₁) ● ... ● F(xn)
         let sources = f.h.s.map_values(&f.h.w)?; // source types

@@ -1,5 +1,9 @@
 #![forbid(missing_docs)]
 #![forbid(unsafe_code)]
+#![deny(clippy::all)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::many_single_char_names)]
+#![warn(clippy::nursery)]
 #![doc = include_str!("../README.md")]
 pub mod array;
 pub mod finite_function;

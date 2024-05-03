@@ -91,7 +91,7 @@ impl<A: Backend> FiniteFunction<A> {
 
     /// The type of a finite function f: A → B is the pair (A, B).
     #[must_use]
-    pub fn get_type(&self) -> (usize, usize) {
+    pub const fn get_type(&self) -> (usize, usize) {
         (self.source, self.target)
     }
 
@@ -357,7 +357,7 @@ impl<A: Backend> FiniteFunction<A> {
     /// ```
     #[must_use]
     pub fn twist(a: usize, b: usize) -> Self {
-        FiniteFunction {
+        Self {
             source: a + b,
             target: a + b,
             table: A::arange(b, b + a).append(&A::arange(0, b)),
@@ -552,7 +552,7 @@ impl_arith!(FiniteFunction, BitOr, bitor, tensor, false);
 /// Errors that can arise when building or computing with finite functions.
 #[derive(Debug, thiserror::Error)]
 pub enum Error<A: Backend> {
-    /// The table has an incorrect number of values ({num_values}) to be from source {src}.
+    /// The table has an incorrect number of values ({`num_values`}) to be from source {`src`}.
     #[error("The table has an incorrect number of values ({num_values}) to be from source {src}.")]
     IncorrectNumSource {
         /// The number of values in the table
@@ -560,7 +560,7 @@ pub enum Error<A: Backend> {
         /// The source domain
         src: usize,
     },
-    /// The target value {too_big} for input {input} is larger than or equal to {target}.
+    /// The target value {`too_big`} for input {`input`} is larger than or equal to {`target`}.
     #[error("The target value {too_big} for input {input} is larger than or equal to {target}.")]
     TargetValueTooBig {
         /// The value that was too big
@@ -570,7 +570,7 @@ pub enum Error<A: Backend> {
         /// The target codomain
         target: usize,
     },
-    /// In the composition, the intermediate target {f} does not match the intermediate source of {g}.
+    /// In the composition, the intermediate target {`f`} does not match the intermediate source of {`g`}.
     #[error("In the composition, the intermediate target of {f} does not match the intermediate source of {g}.")]
     CompositionMismatch {
         /// First function
@@ -578,7 +578,7 @@ pub enum Error<A: Backend> {
         /// Second function
         g: FiniteFunction<A>,
     },
-    /// In the coproduct, the target of {f} does not match the target of {g}.
+    /// In the coproduct, the target of {`f`} does not match the target of {`g`}.
     #[error("In the coproduct, the target of {f} does not match the target of {g}.")]
     CoproductMismatch {
         /// The first function
@@ -586,7 +586,7 @@ pub enum Error<A: Backend> {
         /// The second function
         g: FiniteFunction<A>,
     },
-    /// In the coequalizer, the type of {f} doesn't match the type of {g}.
+    /// In the coequalizer, the type of {`f`} doesn't match the type of {`g`}.
     #[error("In the coequalizer, the type of {f} doesn't match the type of {g}.")]
     CoequalizerMismatch {
         /// The first function
@@ -594,7 +594,7 @@ pub enum Error<A: Backend> {
         /// The second function
         g: FiniteFunction<A>,
     },
-    /// The universal morphism doesn't make {q} ; {u} commute. Is q really a coequalizer?
+    /// The universal morphism doesn't make {`q`} ; {`u`} commute. Is q really a coequalizer?
     #[error("The universal morphism doesn't make {q} ; {u} commute. Is q really a coequalizer?")]
     DoesntCommute {
         /// Supposed coequalizer
@@ -602,7 +602,7 @@ pub enum Error<A: Backend> {
         /// Supposed universal morphism
         u: FiniteFunction<A>,
     },
-    /// The tables {first} and {second} have different lengths.
+    /// The tables {`first`} and {`second`} have different lengths.
     #[error("The tables {first} and {second} have different lengths.")]
     DifferentLengths {
         /// The first table
@@ -619,11 +619,11 @@ pub(crate) mod strategies {
     use crate::array::strategies as a;
     use proptest::prelude::*;
 
-    pub(crate) fn object(allow_initial: bool) -> impl Strategy<Value = usize> {
+    pub fn object(allow_initial: bool) -> impl Strategy<Value = usize> {
         usize::from(!allow_initial)..32
     }
 
-    pub(crate) fn arrows<A: Backend>() -> impl Strategy<Value = FiniteFunction<A>> {
+    pub fn arrows<A: Backend>() -> impl Strategy<Value = FiniteFunction<A>> {
         (object(true), object(true))
             .prop_flat_map(|(s, t)| {
                 let s = if t == 0 { 0 } else { s };
@@ -636,7 +636,7 @@ pub(crate) mod strategies {
             })
     }
 
-    pub(crate) fn arrows_nz<A: Backend>() -> impl Strategy<Value = FiniteFunction<A>> {
+    pub fn arrows_nz<A: Backend>() -> impl Strategy<Value = FiniteFunction<A>> {
         (object(false), object(false))
             .prop_flat_map(|(s, t)| {
                 let s = if t == 0 { 0 } else { s };
@@ -649,7 +649,7 @@ pub(crate) mod strategies {
             })
     }
 
-    pub(crate) fn arrow<A: Backend>(
+    pub fn arrow<A: Backend>(
         source: usize,
         target: usize,
     ) -> impl Strategy<Value = FiniteFunction<A>> {
@@ -662,20 +662,20 @@ pub(crate) mod strategies {
         )
     }
 
-    pub(crate) fn arrow_from<A: Backend>(
+    pub fn arrow_from<A: Backend>(
         source: usize,
     ) -> impl Strategy<Value = FiniteFunction<A>> {
         (Just(source), object(false)).prop_flat_map(|(s, t)| arrow(s, t))
     }
 
-    pub(crate) fn arrow_to<A: Backend>(target: usize) -> impl Strategy<Value = FiniteFunction<A>> {
+    pub fn arrow_to<A: Backend>(target: usize) -> impl Strategy<Value = FiniteFunction<A>> {
         (object(true), Just(target)).prop_flat_map(|(s, t)| {
             let s = if t == 0 { 0 } else { s };
             arrow(s, t)
         })
     }
 
-    pub(crate) fn permutation<A: Backend>(n: usize) -> impl Strategy<Value = FiniteFunction<A>> {
+    pub fn permutation<A: Backend>(n: usize) -> impl Strategy<Value = FiniteFunction<A>> {
         a::permutation(n).prop_map(|table: A| {
             let source = table.len();
             let target = table.len();
@@ -687,24 +687,24 @@ pub(crate) mod strategies {
         })
     }
 
-    pub(crate) fn two_parallel<A: Backend>(
+    pub fn two_parallel<A: Backend>(
     ) -> impl Strategy<Value = (FiniteFunction<A>, FiniteFunction<A>)> {
         arrows().prop_flat_map(|f| (Just(f.clone()), arrow(f.source, f.target)))
     }
 
-    pub(crate) fn two_composite<A: Backend>(
+    pub fn two_composite<A: Backend>(
     ) -> impl Strategy<Value = (FiniteFunction<A>, FiniteFunction<A>)> {
         object(true)
             .prop_flat_map(arrow_from)
             .prop_flat_map(|f| (Just(f.clone()), arrow_from(f.target)))
     }
 
-    pub(crate) fn three_composite<A: Backend>(
+    pub fn three_composite<A: Backend>(
     ) -> impl Strategy<Value = (FiniteFunction<A>, FiniteFunction<A>, FiniteFunction<A>)> {
         two_composite().prop_flat_map(|(f, g)| (Just(f), Just(g.clone()), arrow_from(g.target)))
     }
 
-    pub(crate) fn same_target<A: Backend>() -> impl Strategy<Value = Vec<FiniteFunction<A>>> {
+    pub fn same_target<A: Backend>() -> impl Strategy<Value = Vec<FiniteFunction<A>>> {
         (object(true), object(true))
             .prop_flat_map(|(target, num)| proptest::collection::vec(arrow_to(target), num))
     }
