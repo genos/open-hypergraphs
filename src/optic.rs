@@ -60,7 +60,7 @@ pub trait Optic<A: Backend>: FrobeniusFunctor<A> {
         let fb = self.fwd().map_objects(&b.values)?;
         let ra = self.rev().map_objects(&a.values)?;
         let rb = self.rev().map_objects(&b.values)?;
-        let m = self.residual(&x, &a, &b)?;
+        let m = self.residual(x, a, b)?;
 
         // NOTE: we use flatmap here to ensure that each "block" of FB, which
         // might be e.g., F(B₀ ● B₁ ● ... ● Bn) is correctly interleaved:
