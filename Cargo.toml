@@ -4,7 +4,6 @@ version = "0.0.0"
 edition = "2021"
 description = "Rust (re-)implementation of open hypegraphs"
 license = "MIT"
-license_file = "LICENSE"
 repository = "https://github.com/genos/open-hypergraphs"
 categories = ["data structures"]
 keywords = ["data structures"]
