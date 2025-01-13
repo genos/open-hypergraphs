@@ -8,6 +8,7 @@ use std::{
 };
 
 /// Finite functions implemented as arrays.
+///
 /// Finite functions can be thought of as a thin wrapper around integer arrays whose elements are
 /// within a specified range.
 /// Each `FiniteFunction` consists of a source (the domain as an unsigned integer), a target

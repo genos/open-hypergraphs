@@ -1,21 +1,21 @@
 [package]
 name = "open-hypergraphs"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
-description = "Rust (re-)implementation of open hypegraphs"
+description = "Rust (re-)implementation of open hypergraphs"
 license = "MIT"
 repository = "https://github.com/genos/open-hypergraphs"
 categories = ["data structures"]
 keywords = ["data structures"]
 
 [dependencies]
-itertools = "0.13.0"
+itertools = "0.14.0"
 ndarray = "0.16.1"
-thiserror = "1.0.63"
+thiserror = "2.0.11"
 
 [dev-dependencies]
 paste = "1.0.15"
-proptest = "1.5.0"
+proptest = "1.6.0"
 
 [profile.dev]
 debug = 0
